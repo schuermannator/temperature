@@ -1,0 +1,46 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Missing Data</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+
+		<link rel="stylesheet" href="dist/uPlot.min.css">
+	</head>
+	<body>
+		<script src="dist/uPlot.iife.js"></script>
+
+		<script>
+			const opts = {
+				title: "Temperature",
+				width: 1600,
+				height: 800,
+				series: [
+					{},
+					{
+						label: "Temp",
+						scale: "°F",
+						value: (u, v) => v == null ? "-" : v.toFixed(1) + "°F",
+						stroke: "blue",
+						fill: "rgba(0,0,255,0.05)",
+					}
+				],
+				axes: [
+					{},
+					{
+						scale: '°F',
+						values: (u, vals, space) => vals.map(v => +v.toFixed(1) + "°F"),
+					},
+				],
+			};
+
+            let data = fetch('https://temp.zvs.io/data')
+                .then(response => response.json())
+                .then(data => [data["times"], data["temps"]])
+                .then(data => new uPlot(opts, data, document.body));
+
+            // console.log(data);
+			// let u = new uPlot(opts, data, document.body);
+		</script>
+	</body>
+</html>
