@@ -5,7 +5,7 @@ RUN cargo build --release
 
 FROM gcr.io/distroless/cc
 COPY dist/ dist/
+COPY index.html ./
 COPY --from=builder /build/target/release/temperature ./
-COPY --from=builder /index.html ./
 EXPOSE 8000
 ENTRYPOINT ["./temperature"]
