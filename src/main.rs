@@ -10,6 +10,7 @@ use rocket::State;
 use rocket::response::NamedFile;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
+use std::env;
 
 #[get("/")]
 async fn index() -> NamedFile {
@@ -75,20 +76,23 @@ impl DB {
         me.temps.push(temp);
     }
     fn scrape(&mut self) -> Result<()> {
-        let url = "https://api.particle.io/v1/devices/40003f000547353138383138/events?access_token=c8707351c482312444480faf5abe507a88d67584";
-        let client = Client::new(Url::parse(url).unwrap());
-
-        for event in client {
-            let event = event.unwrap();
-            if event.is_empty() {
-                continue;
+        let token = env::var("API_TOKEN");
+        if let Ok(token) = token {
+            let url = format!("https://api.particle.io/v1/devices/40003f000547353138383138/events?access_token={}", token);
+            let client = Client::new(Url::parse(&url).unwrap());
+    
+            for event in client {
+                let event = event.unwrap();
+                if event.is_empty() {
+                    continue;
+                }
+                let e: Event = serde_json::from_str(event.data.as_str())?;
+                //println!("{}", e.published_at);
+                //println!("{}", e.data);
+                self.save(e);
+                //println!("{:?}", self.0.lock().unwrap().times);
+                //println!("{:?}", self.0.lock().unwrap().temps);
             }
-            let e: Event = serde_json::from_str(event.data.as_str())?;
-            //println!("{}", e.published_at);
-            //println!("{}", e.data);
-            self.save(e);
-            //println!("{:?}", self.0.lock().unwrap().times);
-            //println!("{:?}", self.0.lock().unwrap().temps);
         }
         Ok(())
     }
