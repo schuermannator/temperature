@@ -71,9 +71,12 @@ impl DB {
     fn save(&mut self, e: Event) {
         let mut me = self.0.lock().unwrap();
         let datetime = e.published_at.parse::<DateTime<Local>>().unwrap();
-        let temp: f32 = e.data.parse().unwrap();
-        me.times.push(datetime.timestamp());
-        me.temps.push(temp);
+        if let Ok(temp) = e.data.parse::<f32>() {
+            if temp < 110.0 {
+                me.times.push(datetime.timestamp());
+                me.temps.push(temp);
+            }
+        }
     }
     fn scrape(&mut self) -> Result<()> {
         let token = env::var("API_TOKEN");
