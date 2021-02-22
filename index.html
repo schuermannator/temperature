@@ -13,8 +13,7 @@
 		<script>
 			const opts = {
 				title: "Temperature",
-				width: 1600,
-				height: 800,
+                ...getSize(),
 				series: [
 					{},
 					{
@@ -34,13 +33,24 @@
 				],
 			};
 
+            const do_plot = (opts, data) => {
+                let u = new uPlot(opts, data, document.body);
+                window.addEventListener("resize", e => {
+    	            u.setSize(getSize());
+                });
+            };
+
             let data = fetch('https://temp.zvs.io/data')
                 .then(response => response.json())
                 .then(data => [data["times"], data["temps"]])
-                .then(data => new uPlot(opts, data, document.body));
+                .then(data => do_plot(opts, data));
 
-            // console.log(data);
-			// let u = new uPlot(opts, data, document.body);
+            function getSize() {
+	            return {
+		            width: window.innerWidth - 50,
+		            height: window.innerHeight - 200,
+	            }
+            }
 		</script>
 	</body>
 </html>
