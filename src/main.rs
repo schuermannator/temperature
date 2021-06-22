@@ -2,7 +2,6 @@ use chrono::prelude::*;
 use eventsource::reqwest::Client;
 use reqwest::Url;
 use serde::{Deserialize, Serialize};
-use serde_json::Result;
 use std::thread;
 #[macro_use]
 extern crate rocket;
@@ -78,18 +77,24 @@ impl DB {
             }
         }
     }
-    fn scrape(&mut self) -> Result<()> {
+    fn scrape(&mut self) -> Result<(), String> {
         let token = env::var("API_TOKEN");
         if let Ok(token) = token {
             let url = format!("https://api.particle.io/v1/devices/40003f000547353138383138/events?access_token={}", token);
             let client = Client::new(Url::parse(&url).unwrap());
     
             for event in client {
-                let event = event.unwrap();
+                let event = match event {
+                    Ok(event) => event,
+                    Err(e) => {
+                        println!("{}", e);
+                        continue;
+                    }
+                };
                 if event.is_empty() {
                     continue;
                 }
-                let e: Event = serde_json::from_str(event.data.as_str())?;
+                let e: Event = serde_json::from_str(event.data.as_str()).map_err(|e| e.to_string())?;
                 //println!("{}", e.published_at);
                 //println!("{}", e.data);
                 self.save(e);
